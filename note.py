@@ -5,12 +5,18 @@ class note:
     def __str__(self): abstract
     def translate(self, d_pos): abstract
     def mirror(self): abstract
-    def shift_time(self, dt): abstract
-    def reverse_time(self, sum_t): abstract
+    def time_shift(self, dt): abstract
+    def time_reverse(self, sum_t):
+        '''center of symmetry = sum_t / 2'''
+        abstract
 
-    def translated(self):
+    def set_color(self, color):
+        '''-1 means setting to black lines'''
+        pass    # except for arc
+
+    def translated(self, d_pos):
         copy = deepcopy(self)
-        copy.translate()
+        copy.translate(d_pos)
         return copy
 
     def mirrored(self):
@@ -18,20 +24,25 @@ class note:
         copy.mirror()
         return copy
 
-    def shifted_time(self):
+    def time_shifted(self, dt):
         copy = deepcopy(self)
-        copy.shift_time()
+        copy.time_shift(dt)
         return copy
 
-    def reversed_time(self):
+    def time_reversed(self, sum_t):
         copy = deepcopy(self)
-        copy.reverse_time()
+        copy.time_reverse(sum_t)
+        return copy
+
+    def set_colored(self, color):
+        copy = deepcopy(self)
+        copy.set_color(color)
         return copy
 
 class tap(note):
     def __init__(self, t, lane):
-        self.t = t
-        self.lane = lane
+        self.t = int(t)
+        self.lane = int(lane)
 
     def __str__(self):
         return '(%d,%d);' % (self.t, self.lane)
@@ -42,18 +53,17 @@ class tap(note):
     def mirror(self):
         self.lane = 5 - self.lane
 
-    def shift_time(self, dt):
+    def time_shift(self, dt):
         self.t += dt
 
-    def reverse_time(self, sum_t):
-        '''center of symmetry = sum_t / 2'''
+    def time_reverse(self, sum_t):
         self.t = sum_t - self.t
 
 class hold(note):
     def __init__(self, t1, t2, lane):
-        self.t1 = t1
-        self.t2 = t2
-        self.lane = lane
+        self.t1 = int(t1)
+        self.t2 = int(t2)
+        self.lane = int(lane)
 
     def __str__(self):
         return 'hold(%d,%d,%d);' % (self.t1, self.t2, self.lane)
@@ -64,29 +74,31 @@ class hold(note):
     def mirror(self):
         self.lane = 5 - self.lane
 
-    def shift_time(self, dt):
+    def time_shift(self, dt):
         self.t1 += dt
         self.t2 += dt
 
-    def reverse_time(self, sum_t):
-        '''center of symmetry = sum_t / 2'''
+    def time_reverse(self, sum_t):
         self.t1, self.t2 = sum_t - self.t2, sum_t - self.t1
 
 class arc(note):
     def __init__(self, t1, t2, pos1, pos2, easing = 'b', color = None, black = False, arctaps = []):
         '''easing: b, s, si, so, sisi, siso, sosi, soso'''
-        self.t1 = t1
-        self.t2 = t2
+        self.t1 = int(t1)
+        self.t2 = int(t2)
         self.pos1 = cd.position(pos1)
         self.pos2 = cd.position(pos2)
-        self.easing = easing
-        if color is None:
-            self.color = 1 if pos1[0] > 0.5 else 0
-        else: self.color = color
-        self.black = black
-        self.arctaps = arctaps
+        self.easing = str(easing)
+        self.color = color
+        self.black = self.color == -1 or bool(black)
+        self.arctaps = list(arctaps)
 
     def __str__(self):
+        if self.color is None:
+            if self.black:
+                self.color = 1 if pos1[0] > 0.5 else 0
+            else:
+                print("Warning: arc(%d,%.2f,%.2f -%s- %d,%.2f,%.2f).color is None" % (self.t1, self.pos1.x, self.pos1.y, self.easing, self.t2, self.pos2.x, self.pos2.y))
         self.arctaps.sort()
         if self.arctaps:
             str_arctaps = '[' + ','.join('arctap(%d)' % t for t in self.arctaps) + ']'
@@ -116,73 +128,174 @@ class arc(note):
         if self.color in (0,1):
             self.color = 1 - self.color
 
-    def shift_time(self, dt):
+    def time_shift(self, dt):
         self.t1 += dt
         self.t2 += dt
         self.arctaps = [t + dt for t in self.arctaps]
 
-    def reverse_time(self, sum_t = None):
-        '''center of symmetry = sum_t / 2'''
+    def time_reverse(self, sum_t = None):
         if sum_t is not None:
             self.t1, self.t2 = sum_t - self.t2, sum_t - self.t1
         self.pos1, self.pos2 = self.pos2, self.pos1
         self.easing = self.easing.translate(str.maketrans('io','oi'))
         self.arctaps = [sum_t - t for t in self.arctaps]
 
+    def set_color(self, color):
+        if color != -1:
+            self.color = color
+        else:
+            self.black = True
+
 class timing(note):
     def __init__(self, t, bpm, beats):
-        self.t = t
-        self.bpm = bpm
-        self.beats = beats
+        self.t = int(t)
+        self.bpm = float(bpm)
+        self.beats = float(beats)
 
     def __str__(self):
         return 'timing(%d,%.2f,%.2f);' % (self.t, self.bpm, self.beats)
 
+    def translate(self, d_pos): pass
+
+    def mirror(self): pass
+
+    def time_shift(self, dt):
+        self.t += dt
+
+    def time_reverse(self, sum_t):
+        print("Warning: [undefined behavior] timing.time_reverse")
+        self.t = sum_t - t
+
 class camera(note):
-    def __init__(self, t, dt, dx, dy, dz, d_ax, d_ay, d_az, easing):
+    def __init__(self, t, dt, dx, dy, dz, drx, dry, drz, easing):
         '''easing: qi, qo, l, reset, s'''
-        self.t = t
-        self.dt = dt
-        self.dx = dx
-        self.dy = dy
-        self.dz = dz
-        self.d_ax = d_ax
-        self.d_ay = d_ay
-        self.d_az = d_az
-        self.easing = easing
+        self.t = int(t)
+        self.dt = float(dt)
+        self.dx = float(dx)
+        self.dy = float(dy)
+        self.dz = float(dz)
+        self.drx = float(drx)
+        self.dry = float(dry)
+        self.drz = float(drz)
+        self.easing = str(easing)
 
     def __str__(self):
-        return 'camera(%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%d);' % (self.t, self.dx, self.dy, self.dz, self.d_ax, self.d_ay, self.d_az, self.easing, self.dt)
+        return 'camera(%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%d);' % (self.t, self.dx, self.dy, self.dz, self.drx, self.dry, self.drz, self.easing, self.dt)
+
+    def translate(self, d_pos): pass
+
+    def mirror(self): pass
+
+    def time_shift(self, dt):
+        self.t += dt
+
+    def time_reverse(self, sum_t):
+        self.dx = -self.dx
+        self.dy = -self.dy
+        self.dz = -self.dz
+        self.drx = -self.drx
+        self.dry = -self.dry
+        self.drz = -self.drz
+        if self.easing != 'reset':
+            self.t = sum_t - t - dt
+        else:
+            self.t = sum_t - t
+        if self.easing == 'qi': self.easing = 'qo'
+        elif self.easing == 'qo': self.easing = 'qi'
 
 class scenecontrol(note):
-    def __init__(self, t, type, x = 0, y = 0):
-        '''type: trackdisplay, redline, arcahvdistort, arcahvdebris'''
-        self.t = t
-        self.type = type
-        self.x = x
-        self.y = y
+    def __init__(self, t, act, *args):
+        '''act: trackhide, trackshow, redline, arcahvdistort, arcahvdebris, hidegroup'''
+        self.t = int(t)
+        self.act = str(act)
+        self.args = args
 
     def __str__(self):
-        return 'scenecontrol(%d,%s,%f,%d);' % (self.t, self.type, self.x, self.y)
+        str_arg = ','.join([self.act] + map(str, args))
+        # There are unknown args; see wiki.
+        return 'scenecontrol(%d,%s);' % (self.t, str_arg)
+
+    def translate(self, d_pos): pass
+
+    def mirror(self): pass
+
+    def time_shift(self, dt):
+        self.t += dt
+
+    def time_reverse(self, sum_t):
+        print("Warning: [undefined behavior] scenecontrol.time_reverse")
+        self.t = sum_t - t
+
 
 class collection(note,list):
-    pass
-
-class timinggroup(note):
     def __init__(self, *args, **kwargs):
-        self.items = list(*args, **kwargs)
+        list.__init__(self, *args, **kwargs)
 
     def __str__(self):
-        return '\n'.join(['timinggroup(){'] + [str(item) for item in self.items] + ['};'])
+        return '\n'.join(str(item) for item in self)
 
-def snake(list):
-    '''keep successive arcs sorted by time'''
+    def mirror(self):
+        for item in self: item.mirror()
+
+    def translate(self, d_pos):
+        for item in self: item.translate(d_pos)
+
+    def time_shift(self, dt):
+        for item in self: item.time_shift(dt)
+
+    def time_reverse(self, sum_t):
+        '''center of symmetry = sum_t / 2'''
+        for item in self: item.time_reverse(sum_t)
+        self.reverse()
+
+    def set_color(self, color):
+        for item in self: item.set_color(color)
+
+    def mirrored(self):
+        return collection(item.mirrored() for item in self)
+
+    def translated(self):
+        return collection(item.translated() for item in self)
+
+    def time_shifted(self):
+        return collection(item.time_shifted() for item in self)
+
+    def time_reversed(self):
+        return collection(reversed(item.time_reversed() for item in self))
+
+    def set_colored(self):
+        return collection(item.set_colored() for item in self)
+
+class timinggroup(collection):
+    def __init__(self, noinput = None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.noinput = bool(noinput)
+
+    def __str__(self):
+        return 'timinggroup(' + ('noinput' if self.noinput else '') + '){\n' + collection.__str__(self) + '\n};'
+
+class ordered_collection(collection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.sort(key = lambda arc: arc.t1)
 
+class snake(ordered_collection):
+    '''keep successive arcs sorted by time'''
+    def __init__(self, t = None, pos = None, easing = None, color = None, black = False, arctaps = []):
+        if t is None:
+            super().__init__()
+            return
+        assert len(t) == len(pos)
+        assert len(pos) == len(easing) + 1
+        if color == None and black == False:    # default not black
+            if tuple(pos[0]) == (0,1): color = 0    # TODO: refine conditions
+            elif tuple(pos[0]) == (1,1): color = 1
+        collection.__init__(self, (arc(t[i], t[i+1], pos[i], pos[i+1],
+                easing[i], color, black) for i in range(len(easing))))
+        self.add_taps(arctaps)
+
     def __str__(self):
-        return '\n'.join(str(arc) for arc in self)
+        return '\n'.join(map(str, self))
 
     def add_tap(self, t):
         i = 0
@@ -194,20 +307,3 @@ def snake(list):
         for t in ts:
             while self[i].t2 < t: i += 1
             self[i].add_tap(t)
-
-    def set_color(self, color):
-        for arc in self: arc.color = color
-
-    def mirror(self):
-        for arc in self: arc.mirror()
-
-    def translate(self, d_pos):
-        for arc in self: arc.translate()
-
-    def shift_time(self, dt):
-        for arc in self: arc.shift_time()
-
-    def reverse_time(self, sum_t):
-        '''center of symmetry = sum_t / 2'''
-        for arc in self: arc.reverse_time()
-        self.reverse()

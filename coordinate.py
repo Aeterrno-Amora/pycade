@@ -111,3 +111,19 @@ class d_position:
 
 def lane_position(lane):
     return position(lane * 0.5 - 0.75, -0.2)
+
+
+class vector3:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+class position3:
+    def __init__(self, x, y, t):
+        self.x = x
+        self.y = y
+        self.t = t
+
+    def pos2(self):
+        return position(x, y)
