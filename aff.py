@@ -1,5 +1,6 @@
 import re
 import note
+from gen import taps
 
 
 hold = note.hold
@@ -13,17 +14,13 @@ def arc(t1, t2, x1, x2, easing, y1, y2, color, FX, skylineBoolean, arctaps = [])
 def camera(t, transverse, bottomzoom, linezoom, steadyangle, topzoom, angle, easing, lastingtime):
     return note.camera(t, lastingtime, transverse, bottomzoom, linezoom, steadyangle, topzoom, angle, easing)
 
-def tuple2tap(items):
-    return note.collection(note.tap(*item) if isinstance(item, tuple) else item for item in items)
-
 def parse(s):
     s = s.translate(str.maketrans(';',',',' \t\n'))
-    for old, new in (')[',',['),(']','])'),('noinput){','1,tuple2tap(['),('){','0,tuple2tap(['),('}',']))'),('arctap',''),('false','False'),('true','True'):
+    for old, new in (')[',',['),(']','])'),('noinput){','1,taps('),('){','0,taps('),('}','))'),('arctap',''),('false','False'),('true','True'):
         s = s.replace(old, new)
     for literal in 'b','s','si','so','sisi','siso','sosi','soso','qi','qo','l','reset','none','full','incremental','trackhide','trackshow','redline','arcahvdistort','arcahvdebris','hidegroup':
         s = re.sub(r'(?<=\W)' + literal + r'(?=\W)', '"' + literal + '"', s)
-    items = eval('[' + s + ']')
-    return tuple2tap(items)
+    return eval('taps(' + s + ')')
 
 
 def make_header(AudioOffset = 0, DensityFactor = 1):

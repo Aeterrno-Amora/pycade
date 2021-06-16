@@ -60,13 +60,13 @@ class tap(note):
         self.t = sum_t - self.t
 
 class hold(note):
-    def __init__(self, t1, t2, lane):
+    def __init__(self, t0, t1, lane):
+        self.t0 = int(t0)
         self.t1 = int(t1)
-        self.t2 = int(t2)
         self.lane = int(lane)
 
     def __str__(self):
-        return 'hold(%d,%d,%d);' % (self.t1, self.t2, self.lane)
+        return 'hold(%d,%d,%d);' % (self.t0, self.t1, self.lane)
 
     def translate(self, dx, dy):
         self.lane = max(1, min(4, round(self.lane + cd.d_position(d_pos).x * 2)))
@@ -75,19 +75,19 @@ class hold(note):
         self.lane = 5 - self.lane
 
     def time_shift(self, dt):
+        self.t0 += dt
         self.t1 += dt
-        self.t2 += dt
 
     def time_reverse(self, sum_t):
-        self.t1, self.t2 = sum_t - self.t2, sum_t - self.t1
+        self.t0, self.t1 = sum_t - self.t1, sum_t - self.t0
 
 class arc(note):
-    def __init__(self, t1, t2, pos1, pos2, easing = 'b', color = None, black = False, arctaps = []):
+    def __init__(self, t0, t1, pos0, pos1, easing = 'b', color = None, black = False, arctaps = []):
         '''easing: b, s, si, so, sisi, siso, sosi, soso'''
+        self.t0 = int(t0)
         self.t1 = int(t1)
-        self.t2 = int(t2)
+        self.pos0 = cd.position(pos0)
         self.pos1 = cd.position(pos1)
-        self.pos2 = cd.position(pos2)
         self.easing = str(easing)
         self.color = color
         self.black = self.color == -1 or bool(black)
@@ -96,47 +96,47 @@ class arc(note):
     def __str__(self):
         if self.color is None:
             if self.black:
-                self.color = 1 if pos1[0] > 0.5 else 0
+                self.color = 1 if pos0[0] > 0.5 else 0
             else:
-                print("Warning: arc(%d,%.2f,%.2f -%s- %d,%.2f,%.2f).color is None" % (self.t1, self.pos1.x, self.pos1.y, self.easing, self.t2, self.pos2.x, self.pos2.y))
+                print("Warning: arc(%d,%.2f,%.2f -%s- %d,%.2f,%.2f).color is None" % (self.t0, self.pos0.x, self.pos0.y, self.easing, self.t1, self.pos1.x, self.pos1.y))
         self.arctaps.sort()
         if self.arctaps:
             str_arctaps = '[' + ','.join('arctap(%d)' % t for t in self.arctaps) + ']'
         else: str_arctaps = ''
+        self.pos0 = cd.position(self.pos0)
         self.pos1 = cd.position(self.pos1)
-        self.pos2 = cd.position(self.pos2)
         return 'arc(%d,%d,%.2f,%.2f,%s,%.2f,%.2f,%d,none,%s)%s;' % (
-                self.t1, self.t2, self.pos1.x, self.pos2.x, self.easing, self.pos1.y, self.pos2.y,
+                self.t0, self.t1, self.pos0.x, self.pos1.x, self.easing, self.pos0.y, self.pos1.y,
                 self.color, 'true' if self.black else 'false', str_arctaps)
 
     def add_tap(self, t):
-        assert self.t1 <= t <= self.t2
+        assert self.t0 <= t <= self.t1
         self.arctaps.append(t)
 
     def add_taps(self, ts):
         for t in ts:
-            assert self.t1 <= t <= self.t2
+            assert self.t0 <= t <= self.t1
         self.arctaps.extend(ts)
 
     def translate(self, d_pos):
+        self.pos0 += d_pos
         self.pos1 += d_pos
-        self.pos2 += d_pos
 
     def mirror(self):
+        self.pos0.mirror()
         self.pos1.mirror()
-        self.pos2.mirror()
         if self.color in (0,1):
             self.color = 1 - self.color
 
     def time_shift(self, dt):
+        self.t0 += dt
         self.t1 += dt
-        self.t2 += dt
         self.arctaps = [t + dt for t in self.arctaps]
 
     def time_reverse(self, sum_t = None):
         if sum_t is not None:
-            self.t1, self.t2 = sum_t - self.t2, sum_t - self.t1
-        self.pos1, self.pos2 = self.pos2, self.pos1
+            self.t0, self.t1 = sum_t - self.t1, sum_t - self.t0
+        self.pos0, self.pos1 = self.pos1, self.pos0
         self.easing = self.easing.translate(str.maketrans('io','oi'))
         self.arctaps = [sum_t - t for t in self.arctaps]
 
@@ -277,7 +277,7 @@ class timinggroup(collection):
 class ordered_collection(collection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.sort(key = lambda arc: arc.t1)
+        self.sort(key = lambda arc: arc.t0)
 
 class snake(ordered_collection):
     '''keep successive arcs sorted by time'''
@@ -299,11 +299,11 @@ class snake(ordered_collection):
 
     def add_tap(self, t):
         i = 0
-        while self[i].t2 < t: i += 1
+        while self[i].t1 < t: i += 1
         self[i].add_tap(t)
 
     def add_taps(self, ts):
         i = 0
         for t in ts:
-            while self[i].t2 < t: i += 1
+            while self[i].t1 < t: i += 1
             self[i].add_tap(t)

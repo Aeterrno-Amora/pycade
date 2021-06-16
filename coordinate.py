@@ -127,3 +127,7 @@ class position3:
 
     def pos2(self):
         return position(x, y)
+
+
+def ispos(p):
+    return (isinstance(p, tuple) and (len(p) == 2 or len(p) == 3) and (isinstance(p[0],float) or isinstance(p[0],int))) or isinstance(p, vector) or isinstance(p, position) or isinstance(p, d_position) or isinstance(p, vector3) or isinstance(p, position3)

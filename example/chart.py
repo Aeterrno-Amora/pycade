@@ -27,7 +27,7 @@ chart.extend([
         [(0,1), (0.5,1), (0.5,0), (0.5,1), (0,1), (-0.5,0)],
         ['b'] * 5),
     put_arctaps(
-        taps((11200,4), (12000,-2), (12800,3)),
+        taps((11200,4), (12000,-3), (12800,3)),
         batch_arcs(11200,12000, start_pos = [(0.5,1)] * 4,
             end_pos = four_corners, easing = 'b', black = True)
     ),
