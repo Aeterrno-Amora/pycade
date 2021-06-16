@@ -34,4 +34,4 @@ chart.extend([
     
 ])
 
-aff.save_file('2_out.aff', chart)
+aff.save_file('generated/2_out.aff', chart)
