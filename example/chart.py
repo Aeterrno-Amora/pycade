@@ -37,7 +37,7 @@ chart.extend([
         (13400, (-0.5,0))]),
     put_arctaps(
         taps((11200,4), (12000,-3), (12800,3)),
-        batch_arcs(4, [
+        batch_snakes(4, [
             [11200, [(0.5,1)] * 4, 'b'],
             [12000, four_corners, 'b']
         ], black = True)
