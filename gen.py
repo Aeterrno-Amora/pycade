@@ -5,7 +5,7 @@ import note
 
 four_corners = ((-0.5,0), (0,1), (1,1), (1.5,0))
 
-def equidistant(n, x0 = 0.0, x1 = 1.0, y0 = 1.0, y1 = None):
+def equidistant(n, x0 = 0, x1 = 1, y0 = 1, y1 = None):
     if y1 is None: y1 = y0  # default horizontal
     return zip(range(x0, x1, (x1-x0)/n), range(y0, y1, (y1-y0)/n))
 
@@ -17,7 +17,7 @@ Optional args to snake() and their defaults are:
 
 def swing(t0, t1, dt, poss, easings = 'b', *args, **kwargs):
     '''
-    A snake made by arcs of equal length.
+    A snake composed of arcs of equal duration.
     Keypoints and easing cycle through poss and easings respectively.
     App: springs, successive squares, etc., or simply to create a rhythmic snake.
     '''
