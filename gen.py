@@ -28,7 +28,7 @@ def swing(t0, t1, dt, pos, easing = 'b', color = None, black = False, arctaps = 
 def batch_arcs(n, data, colors = None, black = True):
     '''
     A batch of snakes with same numbers of arcs.
-    Usage: data = [[[ts], [positions], [easings]]]
+    Usage: data = iterable through [[ts], [positions], [easings]]s
            None here in data means "same as above"
     App: double snakes, sky tracks for arctaps
     '''

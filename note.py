@@ -283,16 +283,17 @@ class snake(ordered_collection):
     '''keep successive arcs sorted by time'''
     def __init__(self, data = None, color = None, black = False, arctaps = []):
         '''
-        data = [[t, position, easing]]
+        data: iterable through [t, position, easing]s
         None here in data means "same as above"
         '''
         super().__init__()
         if data is None: return
-        last = data[0]
+        data = iter(data)
+        last = next(data)
         if color == None and black == False:    # default not black lines
             if tuple(last[1]) == (0,1): color = 0    # TODO: refine conditions
             elif tuple(last[1]) == (1,1): color = 1
-        for this in data[1:]:
+        for this in data:
             for i in range(3):
                 if this[i] is None:
                     this[i] = last[i]
