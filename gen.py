@@ -41,7 +41,7 @@ def batch_arcs(n, data, colors = None, black = False):
         last = this
         ts, poss, easings = this
         for k in range(n):
-            data_per_snake[k].append([ts[k], poss[k], easings[k]])
+            data_per_snake[k].append((ts[k], poss[k], easings[k]))
     if colors is None: colors = [None] * n
     return note.collection(note.snake(data_per_snake[k], colors[k], black[k]) for dat in data_per_snake)
 
