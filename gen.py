@@ -25,25 +25,25 @@ def swing(t0, t1, dt, pos, easing = 'b', color = None, black = False, arctaps = 
 
 ################### collection of snakes ###################
 
-def batch_arcs(t1, t2, num_tracks = 2, x0 = 0.0, x1 = 1.0, y = 1.0, start_pos = None, end_pos = None, easing = 's', black = True):
+def batch_arcs(n, data, colors = None, black = True):
     '''
-    Simultaneous arcs.
+    A batch of snakes with same numbers of arcs.
+    Usage: data = [[[ts], [positions], [easings]]]
+           None here in data means "same as above"
     App: double snakes, sky tracks for arctaps
-    start_pos, end_pos: list[coordinates.position] or list of tuples to be converted to positions.
-    If start_pos not given, create equidistant positions on a line.
-    If end_pos not given, default to parrellel straight arcs.
-    Hint: Use zip() to aggregate results of mutliple call of batch_arcs(), then feed into note.snake() to get a batch of snakes.
     '''
-    if start_pos:
-        num_tracks = len(start_pos)
-    elif end_pos:
-        num_tracks = len(end_pos)
-    if start_pos is None:
-        start_pos = [(x0 + (x1 - x0) / num_tracks * i, y) for i in range(num_tracks)]
-    if end_pos is None:
-        end_pos = start_pos
-    return note.collection(note.arc(t1, t2, start_pos[i], end_pos[i], easing, 0 if i * 2 < num_tracks else 1, black)
-            for i in range(num_tracks))
+    data_per_snake = [[] for k in range(n)]
+    last = None
+    for this in data:
+        for i in range(3):
+            if this[i] is None:
+                this[i] = last[i]
+        last = this
+        ts, poss, easings = this
+        for k in range(n):
+            data_per_snake[k].append([ts[k], poss[k], easings[k]])
+    if colors is None: colors = [None] * n
+    return note.collection(note.snake(data_per_snake[k], colors[k], black[k]) for dat in data_per_snake)
 
 ################### collection of notes ###################
 
