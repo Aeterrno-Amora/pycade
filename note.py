@@ -96,7 +96,7 @@ class arc(note):
     def __str__(self):
         if self.color is None:
             if self.black:
-                self.color = 1 if pos0[0] > 0.5 else 0
+                self.color = 1 if self.pos0.x > 0.5 else 0
             else:
                 print("Warning: arc(%d,%.2f,%.2f -%s- %d,%.2f,%.2f).color is None" % (self.t0, self.pos0.x, self.pos0.y, self.easing, self.t1, self.pos1.x, self.pos1.y))
         self.arctaps.sort()
@@ -296,7 +296,7 @@ class snake(ordered_collection):
             for x in datum:
                 if type(x) == int: t = x
                 elif type(x) == str: easing = x
-                elif pos = x
+                else: pos = x
 
         data = iter(data)
         update(next(data))

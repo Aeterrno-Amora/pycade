@@ -21,29 +21,33 @@ def swing(t0, t1, dt, poss, easings = 'b', *args, **kwargs):
     Keypoints and easing cycle through poss and easings respectively.
     App: springs, successive squares, etc., or simply to create a rhythmic snake.
     '''
-    return note.snake(zip(chain(range(t0, t1, dt), [t1]), it.cycle(poss), it.cycle(easings)), *args, **kwargs)
+    return note.snake(zip(it.chain(range(t0, t1, dt), [t1]), it.cycle(poss), it.cycle(easings)), *args, **kwargs)
 
 ################### collection of snakes ###################
 
 def batch_arcs(n, data, colors = None, black = False):
     '''
     A batch of snakes with same numbers of arcs.
-    Usage: data = iterable through [[ts], [positions], [easings]]s
-           None here in data means "same as above"
+    Usage: data = iterable through [ts, positions, easings]
+           xxxs is an iterable through xxx to be traversed or a single xxx to be repeated
+           None here means "same as above"
     App: double snakes, sky tracks for arctaps
     '''
     data_per_snake = [[] for k in range(n)]
-    last = None
+    last = [None, None, 'b']  # default easing = 'b'
     for this in data:
         for i in range(3):
             if this[i] is None:
                 this[i] = last[i]
         last = this
         ts, poss, easings = this
-        for k in range(n):
-            data_per_snake[k].append((ts[k], poss[k], easings[k]))
-    if colors is None: colors = [None] * n
-    return note.collection(note.snake(data_per_snake[k], colors[k], black[k]) for dat in data_per_snake)
+        ts = (it.repeat if type(ts) == int else iter)(ts)
+        poss = (it.repeat if note.cd.ispos(poss) else iter)(poss)
+        easings = (it.repeat if type(easings) == str else iter)(easings)
+        for dat in data_per_snake:
+            dat.append((next(ts), next(poss), next(easings)))
+    colors = (iter if hasattr(colors, '__iter__') else it.repeat)(colors)
+    return note.collection(note.snake(dat, next(colors), black) for dat in data_per_snake)
 
 ################### collection of notes ###################
 
