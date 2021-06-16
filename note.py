@@ -281,18 +281,25 @@ class ordered_collection(collection):
 
 class snake(ordered_collection):
     '''keep successive arcs sorted by time'''
-    def __init__(self, t = None, pos = None, easing = None, color = None, black = False, arctaps = []):
-        if t is None:
-            super().__init__()
-            return
-        assert len(t) == len(pos)
-        assert len(pos) == len(easing) + 1
-        if color == None and black == False:    # default not black
-            if tuple(pos[0]) == (0,1): color = 0    # TODO: refine conditions
-            elif tuple(pos[0]) == (1,1): color = 1
-        collection.__init__(self, (arc(t[i], t[i+1], pos[i], pos[i+1],
-                easing[i], color, black) for i in range(len(easing))))
-        self.add_taps(arctaps)
+    def __init__(self, data = None, color = None, black = False, arctaps = []):
+        '''
+        data = [[t, position, easing]]
+        None here in data means "same as above"
+        '''
+        super().__init__()
+        if data is None: return
+        last = data[0]
+        if color == None and black == False:    # default not black lines
+            if tuple(last[1]) == (0,1): color = 0    # TODO: refine conditions
+            elif tuple(last[1]) == (1,1): color = 1
+        for this in data[1:]:
+            for i in range(3):
+                if this[i] is None:
+                    this[i] = last[i]
+            t0, pos0, easing = last
+            t1, pos1, _ = this
+            self.append(arc(t0,t1, pos0,pos1, easing, color, black))
+            last = this
 
     def __str__(self):
         return '\n'.join(map(str, self))
