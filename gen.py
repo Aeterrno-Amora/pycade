@@ -10,18 +10,18 @@ def equidistant(n, x0 = 0.0, x1 = 1.0, y0 = 1.0, y1 = None):
     return zip(range(x0, x1, (x1-x0)/n), range(y0, y1, (y1-y0)/n))
 
 ########################## snake ##########################
+'''
+Optional args to snake() and their defaults are:
+    color = None, black = False, arctaps = []
+'''
 
-def swing(t0, t1, dt, pos, easing = 'b', color = None, black = False, arctaps = []):
+def swing(t0, t1, dt, poss, easings = 'b', *args, **kwargs):
     '''
     A snake made by arcs of equal length.
-    Keypoints and easing cycle through pos and easing respectively.
+    Keypoints and easing cycle through poss and easings respectively.
     App: springs, successive squares, etc., or simply to create a rhythmic snake.
     '''
-    n = (t1 - t0) // dt
-    return note.snake(list(range(t0, t1, dt)) + [t1],
-            list(it.islice(it.cycle(pos), n+1)),
-            [easing] * n if isinstance(easing, str) else list(it.islice(it.cycle(easing), n)),
-            color, black, arctaps)
+    return note.snake(zip(chain(range(t0, t1, dt), [t1]), it.cycle(poss), it.cycle(easings)), *args, **kwargs)
 
 ################### collection of snakes ###################
 
