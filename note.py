@@ -96,7 +96,7 @@ class arc(note):
     def __str__(self):
         if self.color is None:
             if self.black:
-                self.color = 1 if pos0[0] > 0.5 else 0
+                self.color = 1 if self.pos0.x > 0.5 else 0
             else:
                 print("Warning: arc(%d,%.2f,%.2f -%s- %d,%.2f,%.2f).color is None" % (self.t0, self.pos0.x, self.pos0.y, self.easing, self.t1, self.pos1.x, self.pos1.y))
         self.arctaps.sort()
@@ -281,18 +281,33 @@ class ordered_collection(collection):
 
 class snake(ordered_collection):
     '''keep successive arcs sorted by time'''
-    def __init__(self, t = None, pos = None, easing = None, color = None, black = False, arctaps = []):
-        if t is None:
-            super().__init__()
-            return
-        assert len(t) == len(pos)
-        assert len(pos) == len(easing) + 1
-        if color == None and black == False:    # default not black
-            if tuple(pos[0]) == (0,1): color = 0    # TODO: refine conditions
-            elif tuple(pos[0]) == (1,1): color = 1
-        collection.__init__(self, (arc(t[i], t[i+1], pos[i], pos[i+1],
-                easing[i], color, black) for i in range(len(easing))))
-        self.add_taps(arctaps)
+    def __init__(self, data = None, color = None, black = False, arctaps = []):
+        '''
+        data: iterable through (t, position, easing)s
+              3 args in the tuple can be arbitrarily ordered, and are told by type.
+              Missing t means "skip this", missing pos or easing means "same as above".
+        '''
+        super().__init__()
+        if data is None: return
+
+        def proc_data():
+            t, pos, easing = 0, (0,1), 'b'  # default values
+            for datum in data:
+                if any(type(x) == int for x in datum):
+                    for x in datum:
+                        if type(x) == int: t = x
+                        elif cd.ispos(x): pos = x
+                        elif type(x) == str: easing = x
+                    yield t, pos, easing
+
+        it_data = proc_data()
+        t0, pos0, easing0 = next(it_data)
+        if color == None:    # default not black lines
+            if tuple(pos0) == (0,1): color = 0    # TODO: refine conditions
+            elif tuple(pos0) == (1,1): color = 1
+        for t, pos, easing in it_data:
+            self.append(arc(t0,t, pos0,pos, easing0, color, black))
+            t0, pos0, easing0 = t, pos, easing
 
     def __str__(self):
         return '\n'.join(map(str, self))
