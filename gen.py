@@ -80,3 +80,14 @@ def put_arctaps(items, snakes, offset = 0):
             new_items[offset - item.lane - 1].add_tap(item.t)
         else: new_items.append(item)
     return new_items
+
+def double(item):
+    return note.collection([item, item.mirrored()])
+
+def repeat(n, dt, item):
+    pattern = deepcopy(item)
+    result = note.collection()
+    for i in range(n):
+        result.append(deepcopy(pattern))
+        pattern.time_shift(dt)
+    return result
