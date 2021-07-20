@@ -49,6 +49,16 @@ def batch_snakes(n, data, colors = None, black = False):
     colors = (iter if hasattr(colors, '__iter__') else it.repeat)(colors)
     return note.collection(note.snake(dat, next(colors), black) for dat in data_per_snake)
 
+def olive(t0, t1, t2, center = (0.5,1), radius = (0.5,0), black = False, diamond = False):
+    '''2 snakes making an olive, with its fatest spot at t1'''
+    center = cd.position(center)
+    radius = cd.d_position(radius)
+    return batch_snakes(2, [
+            [t0, center, 's' if diamond else 'sisi'],
+            [t1, [center - radius, center + radius], 's' if diamond else 'soso'],
+            [t2, center, None]
+        ], colors = [0, 1], black = black)
+
 ################### collection of notes ###################
 
 def taps(*items):
