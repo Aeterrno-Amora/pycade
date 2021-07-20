@@ -89,8 +89,11 @@ class arc(note):
         self.pos0 = cd.position(pos0)
         self.pos1 = self.pos0 if pos1 is None else cd.position(pos1)
         self.easing = str(easing)
+        if color == None:
+            if tuple(pos0) == (0,1): color = 0    # TODO: refine conditions
+            elif tuple(pos0) == (1,1): color = 1
         self.color = color
-        self.black = self.color == -1 or bool(black)
+        self.black = bool(black) or color == -1
         self.arctaps = list(arctaps)
 
     def __str__(self):
@@ -278,7 +281,7 @@ class timinggroup(collection):
 class ordered_collection(collection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.sort(key = lambda arc: arc.t0)
+        self.sort(key = lambda item: item.t0)
 
 class snake(ordered_collection):
     '''keep successive arcs sorted by time'''

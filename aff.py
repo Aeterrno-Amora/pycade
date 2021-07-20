@@ -1,6 +1,6 @@
 import re
 import note
-from gen import taps
+from gen import notes
 
 
 hold = note.hold
@@ -16,11 +16,11 @@ def camera(t, transverse, bottomzoom, linezoom, steadyangle, topzoom, angle, eas
 
 def parse(s):
     s = s.translate(str.maketrans(';',',',' \t\n'))
-    for old, new in (')[',',['),(']','])'),('noinput){','1,taps('),('){','0,taps('),('}','))'),('arctap',''),('false','False'),('true','True'):
+    for old, new in (')[',',['),(']','])'),('noinput){','1,notes('),('){','0,notes('),('}','))'),('arctap',''),('false','False'),('true','True'):
         s = s.replace(old, new)
     for literal in 'b','s','si','so','sisi','siso','sosi','soso','qi','qo','l','reset','none','full','incremental','trackhide','trackshow','redline','arcahvdistort','arcahvdebris','hidegroup':
         s = re.sub(r'(?<=\W)' + literal + r'(?=\W)', '"' + literal + '"', s)
-    return eval('taps(' + s + ')')
+    return eval('notes(' + s + ')')
 
 
 def make_header(AudioOffset = 0, DensityFactor = 1):
