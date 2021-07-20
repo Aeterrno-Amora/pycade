@@ -4,12 +4,11 @@ ORIGIN = (0.5, 1.0)
 
 class vector:
     '''coordinates on the parallel plane messured in pixels, with the middle of the sky input line as the origin'''
-    def __init__(self, x, y):
-        self.x, self.y = x, y
-
-    def __init__(self, p):
-        if isinstance(p, tuple):
-            self.x, self.y = p
+    def __init__(self, *p):
+        if hasattr(p, "__getitem__") and len(p) == 1:
+            p = p[0]
+        if hasattr(p, "__getitem__"):
+            self.x, self.y = float(p[0]), float(p[1])
         elif isinstance(p, vector):
             self.x, self.y = p.x, p.y
         elif isinstance(p, position):
@@ -40,12 +39,11 @@ class vector:
 
 class position:
     '''chart position'''
-    def __init__(self, x, y):
-        self.x, self.y = x, y
-
-    def __init__(self, p):
-        if isinstance(p, tuple):
-            self.x, self.y = p
+    def __init__(self, *p):
+        if hasattr(p, "__getitem__") and len(p) == 1:
+            p = p[0]
+        if hasattr(p, "__getitem__"):
+            self.x, self.y = float(p[0]), float(p[1])
         elif isinstance(p, position):
             self.x, self.y = p.x, p.y
         elif isinstance(p, vector):
@@ -70,12 +68,11 @@ class position:
 
 class d_position:
     '''difference of chart position'''
-    def __init__(self, x, y):
-        self.x, self.y = x, y
-
-    def __init__(self, p):
-        if isinstance(p, tuple):
-            self.x, self.y = p
+    def __init__(self, *p):
+        if hasattr(p, "__getitem__") and len(p) == 1:
+            p = p[0]
+        if hasattr(p, "__getitem__"):
+            self.x, self.y = float(p[0]), float(p[1])
         elif isinstance(p, d_position):
             self.x, self.y = p.x, p.y
         elif isinstance(p, vector):
@@ -115,14 +112,14 @@ def lane_position(lane):
 
 class vector3:
     def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
+        self.x = float(x)
+        self.y = float(y)
+        self.z = float(z)
 
 class position3:
     def __init__(self, x, y, t):
-        self.x = x
-        self.y = y
+        self.x = float(x)
+        self.y = float(y)
         self.t = t
 
     def pos2(self):

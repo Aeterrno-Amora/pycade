@@ -82,12 +82,12 @@ class hold(note):
         self.t0, self.t1 = sum_t - self.t1, sum_t - self.t0
 
 class arc(note):
-    def __init__(self, t0, t1, pos0, pos1, easing = 'b', color = None, black = False, arctaps = []):
+    def __init__(self, t0, t1, pos0, pos1 = None, easing = 'b', color = None, black = False, arctaps = []):
         '''easing: b, s, si, so, sisi, siso, sosi, soso'''
         self.t0 = int(t0)
         self.t1 = int(t1)
         self.pos0 = cd.position(pos0)
-        self.pos1 = cd.position(pos1)
+        self.pos1 = self.pos0 if pos1 is None else cd.position(pos1)
         self.easing = str(easing)
         self.color = color
         self.black = self.color == -1 or bool(black)
@@ -119,6 +119,7 @@ class arc(note):
         self.arctaps.extend(ts)
 
     def translate(self, d_pos):
+        d_pos = cd.d_position(d_pos)
         self.pos0 += d_pos
         self.pos1 += d_pos
 
@@ -254,17 +255,17 @@ class collection(note,list):
     def mirrored(self):
         return collection(item.mirrored() for item in self)
 
-    def translated(self):
-        return collection(item.translated() for item in self)
+    def translated(self, d_pos):
+        return collection(item.translated(d_pos) for item in self)
 
-    def time_shifted(self):
-        return collection(item.time_shifted() for item in self)
+    def time_shifted(self, dt):
+        return collection(item.time_shifted(dt) for item in self)
 
-    def time_reversed(self):
-        return collection(reversed(item.time_reversed() for item in self))
+    def time_reversed(self, sum_t):
+        return collection(reversed(item.time_reversed(sum_t) for item in self))
 
-    def set_colored(self):
-        return collection(item.set_colored() for item in self)
+    def set_colored(self, color):
+        return collection(item.set_colored(color) for item in self)
 
 class timinggroup(collection):
     def __init__(self, noinput = None, *args, **kwargs):
@@ -308,6 +309,7 @@ class snake(ordered_collection):
         for t, pos, easing in it_data:
             self.append(arc(t0,t, pos0,pos, easing0, color, black))
             t0, pos0, easing0 = t, pos, easing
+        self.add_taps(arctaps)
 
     def __str__(self):
         return '\n'.join(map(str, self))

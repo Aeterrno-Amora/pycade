@@ -40,7 +40,7 @@ def save_file(f, chart, header = make_header()):
         print('Warning: Should begin with a timing at t = 0.')
     if file_opened := isinstance(f, str):
         f = open(f, 'w')
-    f.write(header + '\n'.join(str(item) for item in chart))
+    f.write(header + '\n'.join(str(item) for item in chart) + '\n')
     if file_opened: f.close()
 
 def load_file(f):

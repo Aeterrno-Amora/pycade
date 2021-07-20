@@ -1,5 +1,6 @@
 import itertools as it
 import note
+import coordinate as cd
 
 #################### list of positions ####################
 
@@ -27,22 +28,21 @@ def swing(t0, t1, dt, poss, easings = 'b', *args, **kwargs):
 
 def batch_snakes(n, data, colors = None, black = False):
     '''
-    A batch of snakes with same numbers of arcs.
+    Create snakes in batch to avoid code duplication.
     Usage: data = iterable through [ts, positions, easings]
-           xxxs is an iterable through xxx to be traversed or a single xxx to be repeated
-           None here means "same as above"
+           Each xxxs is either an iterable to be traversed or a single value to be repeated.
+           None here means "same as the previous one".
     App: double snakes, sky tracks for arctaps
     '''
     data_per_snake = [[] for k in range(n)]
     last = [None, None, 'b']  # default easing = 'b'
     for this in data:
         for i in range(3):
-            if this[i] is None:
-                this[i] = last[i]
-        last = this
-        ts, poss, easings = this
+            if this[i] is not None:
+                last[i] = this[i]
+        ts, poss, easings = last
         ts = (it.repeat if type(ts) == int else iter)(ts)
-        poss = (it.repeat if note.cd.ispos(poss) else iter)(poss)
+        poss = (it.repeat if cd.ispos(poss) else iter)(poss)
         easings = (it.repeat if type(easings) == str else iter)(easings)
         for dat in data_per_snake:
             dat.append((next(ts), next(poss), next(easings)))
