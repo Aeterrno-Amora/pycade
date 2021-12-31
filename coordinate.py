@@ -80,9 +80,9 @@ class d_position:
         else: raise TypeError("Can't convert " + str(type(p)) + " to d_position")
 
     def __add__(self, p):
-        if isinstance(p, postion):
+        if isinstance(p, position):
             return position(self.x + p.x, self.y + p.y)
-        elif isinstance(p, d_postion):
+        elif isinstance(p, d_position):
             return d_position(self.x + p.x, self.y + p.y)
         elif isinstance(p, vector):
             q = vector(self)
@@ -123,7 +123,7 @@ class position3:
         self.t = t
 
     def pos2(self):
-        return position(x, y)
+        return position(self.x, self.y)
 
 
 def ispos(p):

@@ -33,8 +33,8 @@ def swing(t0, t1, dt, poss, easings = 'b', *args, **kwargs):
 def batch_snakes(n, data, colors = None, black = False):
     '''
     Create snakes in batch to avoid code duplication.
-    Usage: data = iterable through [ts, positions, easings]
-           Each xxxs is either an iterable to be traversed or a single value to be repeated.
+    Usage: data = iterable[[ts, positions, easings]]
+           where each xxxs is either an iterable to be traversed or a single value to be repeated.
            None here means "same as the previous one".
            If a data point contains less than 3 args, it is appended with None.
     App: double snakes, sky tracks for arctaps
