@@ -8,7 +8,9 @@ four_corners = ((-0.5,0), (0,1), (1,1), (1.5,0))
 
 def equidistant(n, x0 = 0, x1 = 1, y0 = 1, y1 = None):
     if y1 is None: y1 = y0  # default horizontal
-    return zip(range(x0, x1, (x1-x0)/n), range(y0, y1, (y1-y0)/n))
+    dx = (x1 - x0) / (n - 1)
+    dy = (y1 - y0) / (n - 1)
+    return tuple((x0 + dx * i, y0 + dy * i) for i in range(0, n))
 
 ########################## snake ##########################
 '''
@@ -29,14 +31,17 @@ def swing(t0, t1, dt, poss, easings = 'b', *args, **kwargs):
 def batch_snakes(n, data, colors = None, black = False):
     '''
     Create snakes in batch to avoid code duplication.
-    Usage: data = iterable through [ts, positions, easings]
-           Each xxxs is either an iterable to be traversed or a single value to be repeated.
+    Usage: data = iterable[[ts, positions, easings]]
+           where each xxxs is either an iterable to be traversed or a single value to be repeated.
            None here means "same as the previous one".
+           If a data point contains less than 3 args, it is appended with None.
     App: double snakes, sky tracks for arctaps
     '''
     data_per_snake = [[] for k in range(n)]
     last = [None, None, 'b']  # default easing = 'b'
     for this in data:
+        while len(this) < 3:
+            this.append(None)
         for i in range(3):
             if this[i] is not None:
                 last[i] = this[i]
