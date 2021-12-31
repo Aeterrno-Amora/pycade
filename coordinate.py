@@ -179,3 +179,20 @@ def lane_position(lane):
 #def initial_cemera()
 INITIAL_CAMERA = vector3(425, 800, 900 if IS_16by9 else 800)  # to be measured
 
+################ utils ################
+
+start, bpm, beats = 0, 150.0, 4.0
+
+def tempo2tf(bar, beat = 0):
+    beat += (bar - 1) * beats
+    return start + beat * 60000 / bpm
+
+def tempo2t(bar, beat = 0):
+    return int(tempo2tf(bar, beat))
+
+def tempo2dtf(bar, beat = 0):
+    beat += bar * beats
+    return beat * 60000 / bpm
+
+def tempo2dt(bar, beat = 0):
+    return int(tempo2dtf(bar, beat))

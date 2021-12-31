@@ -2,6 +2,9 @@ import itertools as it
 import note
 import coordinate as cd
 from copy import deepcopy
+from random import randint
+
+flatten = it.chain.from_iterable
 
 #################### list of positions ####################
 
@@ -13,6 +16,24 @@ def equidistant(n, x0 = 0, x1 = 1, y0 = 1, y1 = None):
     dx = (x1 - x0) / (n - 1)
     dy = (y1 - y0) / (n - 1)
     return tuple(cd.position(x0 + dx * i, y0 + dy * i) for i in range(0, n))
+
+#################### list of times ####################
+
+def t_repeat(ts, end, dt):
+    '''repeat until end, assume an ordered list is provided'''
+    if not hasattr(ts, '__iter__'): ts = (ts,)
+    end -= 1e-4
+    result = []
+    for i in it.count():
+        for t in ts:
+            t1 = t + i * dt
+            if t1 >= end: return result
+            result.append(int(t1))
+
+def t_repeat_n(ts, n, dt):
+    '''repeat n times, sorts the output'''
+    return sorted([int(t + i * dt) for t in ts for i in range(n)]
+        if hasattr(ts, '__iter__') else [int(ts + i * dt) for i in range(n)])
 
 ########################## snake ##########################
 '''
@@ -26,7 +47,8 @@ def swing(t0, t1, dt, poss, easings = 'b', *args, **kwargs):
     Keypoints and easing cycle through poss and easings respectively.
     App: springs, successive squares, etc., or simply to create a rhythmic snake.
     '''
-    return note.snake(zip(it.chain(range(t0, t1, dt), [t1]), it.cycle(poss), it.cycle(easings)), *args, **kwargs)
+    return note.snake(zip(it.chain(t_repeat(t0, t1, dt), [t1]),
+            it.cycle(poss), it.cycle(easings)), *args, **kwargs)
 
 ################### collection of snakes ###################
 
@@ -73,14 +95,15 @@ def notes(*items):
     return note.collection(note.tap(*item) if isinstance(item, tuple)
                             else item for item in items)
 
-def put_arctaps(items, snakes, offset = 0):
-    '''Put taps on lane -i onto sky track snake[offset + (i-1)].'''
-    new_items = deepcopy(snakes)
-    for item in items:
-        if isinstance(item, note.tap) and item.lane < 0:
-            new_items[offset - item.lane - 1].add_tap(item.t)
-        else: new_items.append(item)
-    return new_items
+def batch_taps(ts, *lanes):
+    '''lane = int or iterable[int], iterable means multiple taps at the same time'''
+    result = note.collection()
+    for t, lane in zip(ts, lanes):
+        if hasattr(lane, '__iter__'):
+            result.extend(note.tap(t, l) for l in lane)
+        else:
+            result.append(note.tap(t, lane))
+    return result
 
 def double(item):
     return note.collection([item, item.mirrored()])
@@ -93,3 +116,36 @@ def repeat(n, dt, item, mirror=False):
         pattern.time_shift(dt)
         if mirror: pattern.mirror()
     return result
+
+def put_arctaps(items, snakes, offset = 0):
+    '''Put taps on lane -i onto sky track snakes[offset + (i-1)].'''
+    result = deepcopy(snakes)
+    for item in items:
+        if isinstance(item, note.tap) and item.lane < 0:
+            result[offset - item.lane - 1].add_tap(item.t)
+        else: result.append(item)
+    return result
+
+def rand_taps(ts, n_tracks):
+    result = note.collection()
+    for t in ts:
+        lane = randint(1, 4 + n_tracks)
+        if lane > 4: lane = 4 - lane
+        result.append(note.tap(t, lane))
+    return result
+
+def rand_double_taps(ts, n_tracks):
+    result = note.collection()
+    for t in ts:
+        lane1 = randint(1, 4 + n_tracks)
+        lane2 = randint(1, 3 + n_tracks)
+        if lane2 == lane1: lane2 += 1
+        if lane1 > 4: lane1 = 4 - lane1
+        if lane2 > 4: lane2 = 4 - lane2
+        result.append(note.tap(t, lane1))
+        result.append(note.tap(t, lane2))
+    return result
+
+def rand_sky_floor_taps(ts, n_tracks):
+    return flatten([note.tap(t, randint(1, 4)),
+                    note.tap(t, -randint(1, n_tracks))] for t in ts)
