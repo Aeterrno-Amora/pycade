@@ -5,14 +5,14 @@ from copy import deepcopy
 
 #################### list of positions ####################
 
-two_corners = ((0,1), (1,1))
-four_corners = ((-0.5,0), (0,1), (1,1), (1.5,0))
+two_corners = (cd.position(0,1), cd.position(1,1))
+four_corners = (cd.position(-0.5,0), cd.position(0,1), cd.position(1,1), cd.position(1.5,0))
 
 def equidistant(n, x0 = 0, x1 = 1, y0 = 1, y1 = None):
     if y1 is None: y1 = y0  # default horizontal
     dx = (x1 - x0) / (n - 1)
     dy = (y1 - y0) / (n - 1)
-    return tuple((x0 + dx * i, y0 + dy * i) for i in range(0, n))
+    return tuple(cd.position(x0 + dx * i, y0 + dy * i) for i in range(0, n))
 
 ########################## snake ##########################
 '''
@@ -59,7 +59,7 @@ def batch_snakes(n, data, colors = None, black = False):
 def olive(t0, t1, t2, center = (0.5,1), radius = (0.5,0), black = False, diamond = False):
     '''2 snakes making an olive, with its fatest spot at t1'''
     center = cd.position(center)
-    radius = cd.d_position(radius)
+    radius = cd.position(radius)
     return batch_snakes(2, [
             [t0, center, 's' if diamond else 'sisi'],
             [t1, [center - radius, center + radius], 's' if diamond else 'soso'],
@@ -69,8 +69,9 @@ def olive(t0, t1, t2, center = (0.5,1), radius = (0.5,0), black = False, diamond
 ################### collection of notes ###################
 
 def notes(*items):
-    '''Build collection, while turning tuples into taps.'''
-    return note.collection(note.tap(*item) if isinstance(item, tuple) else item for item in items)
+    '''Build a collection, turning tuples into taps by the way.'''
+    return note.collection(note.tap(*item) if isinstance(item, tuple)
+                            else item for item in items)
 
 def put_arctaps(items, snakes, offset = 0):
     '''Put taps on lane -i onto sky track snake[offset + (i-1)].'''
@@ -84,10 +85,11 @@ def put_arctaps(items, snakes, offset = 0):
 def double(item):
     return note.collection([item, item.mirrored()])
 
-def repeat(n, dt, item):
+def repeat(n, dt, item, mirror=False):
     pattern = deepcopy(item)
     result = note.collection()
     for i in range(n):
         result.append(deepcopy(pattern))
         pattern.time_shift(dt)
+        if mirror: pattern.mirror()
     return result
