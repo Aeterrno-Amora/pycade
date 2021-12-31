@@ -1,5 +1,7 @@
 test/
-example/generated/
+# Ignore various generated or auxiliary files in example folder, except for example codes themselves.
+example/*/*
+!*.py
 
 ############### Windows ################
 

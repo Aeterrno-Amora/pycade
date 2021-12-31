@@ -1,5 +1,5 @@
 import sys
-sys.path.append("..")
+sys.path.append("..\\..")
 import aff
 from note import *
 from gen import *
@@ -64,14 +64,14 @@ low_olive = high_olive.translated((0,-1))
 LlRh_olive = olive(0,400,750, (0.5,0.5), (0.5,0.5))
 LlRh_olive.append(arc(750,799, (0.5,0.5), black=True))
 LhRl_olive = LlRh_olive.mirrored()
-anypos = (114,514)
+place_holder = (114,514)
 low_taps = collection([
-  arc(799,799, anypos,(0.5,-0.2), 's', -1),
+  arc(799,799, place_holder,(0.5,-0.2), 's', -1),
   arc(799,799, (0.25,-0.2),(0.75,-0.2), 's', -1),
   tap(800,2), tap(800,3),
 ])
 high_taps = collection([
-  arc(799,799, anypos,(0.5,1), 's', -1),
+  arc(799,799, place_holder,(0.5,1), 's', -1),
   arc(799,800, (0.5,1),(0.25,1), 's', -1, arctaps = [800]),
 ])
 high_taps.append(high_taps[-1].mirrored())
@@ -79,7 +79,7 @@ high_taps.append(high_taps[-1].mirrored())
 def link(start_t, _olive, _taps):
   olive = _olive.time_shifted(start_t)
   taps = _taps.time_shifted(start_t)
-  taps[0].pos0 = olive[0][-1].pos1
+  taps[0].p0 = olive[0][-1].p1
   olive.extend(taps)
   return olive
 
@@ -183,6 +183,7 @@ chart.extend(notes(
 
 ########################################
 # Chanting the heavens' song
+# *cross-hand*
 
   repeat(2, 800,
     double(notes(
@@ -271,6 +272,14 @@ chart.extend(notes(
   (55000,4),
 
 ########################################
+# Soaked myself in cold water
+# Breaking this endless wheel
+# Praying for divine powers
+# So we can become one
+
+  repeat(6, 1600, olive(55200,56000,56800)),
 ))
 
-aff.save_file('generated/2.aff', chart)
+########################################
+
+aff.save_file('2.aff', chart)
